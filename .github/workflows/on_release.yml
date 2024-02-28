@@ -60,11 +60,11 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           target: client
-          cache-from: type=registry,ref=caseay/opal-client:latest
+          cache-from: type=registry,ref=whispin/opal-client:latest
           cache-to: type=inline
           tags: |
-            caseay/opal-client:latest
-            caseay/opal-client:${{ env.opal_version_tag }}
+            whispin/opal-client:latest
+            whispin/opal-client:${{ env.opal_version_tag }}
 
 
 
