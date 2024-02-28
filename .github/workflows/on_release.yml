@@ -60,11 +60,11 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           target: client
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/opal-client:latest
+          cache-from: type=registry,ref=caseay/opal-client:latest
           cache-to: type=inline
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/opal-client:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/opal-client:${{ env.opal_version_tag }}
+            caseay/opal-client:latest
+            caseay/opal-client:${{ env.opal_version_tag }}
 
 
 
