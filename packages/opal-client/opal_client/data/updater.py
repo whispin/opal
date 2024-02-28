@@ -474,5 +474,7 @@ class DataUpdater:
         )
         if save_method == "PUT":
             await tx.set_policy_data(data, path=path)
+        elif save_method == "DELETE":
+            await tx.delete_policy_data(path=path)
         else:
             await tx.patch_policy_data(data, path=path)
