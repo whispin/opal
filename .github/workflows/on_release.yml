@@ -64,7 +64,6 @@ jobs:
           cache-to: type=inline
           tags: |
             whispin/opal-client:latest
-            whispin/opal-client:${{ env.opal_version_tag }}
 
 
 
