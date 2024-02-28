@@ -52,7 +52,7 @@ jobs:
       # pushes the *same* docker images that were previously tested as part of e2e sanity test.
       # each image is pushed with the versioned tag first, if it succeeds the image is pushed with the latest tag as well.
       - name: Build & Push client
-        if: ${{ !(github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true') }}
+        if: ${{ github.event.inputs.dry_run == 'true' }}
         id: build_push_client
         uses: docker/build-push-action@v4
         with:
