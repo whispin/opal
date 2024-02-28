@@ -49,76 +49,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Get version tag from github release
-        if: github.event_name == 'release' && github.event.action == 'created'
-        run: |
-          echo "opal_version_tag=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-
-      - name: Get version tag from git history
-        if: ${{ !(github.event_name == 'release' && github.event.action == 'created') }}
-        run: |
-          echo "opal_version_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
-
-      - name: Echo version tag
-        run: |
-          echo "The version tag that will be published to docker hub is: ${{ env.opal_version_tag }}"
-
-      - name: Build client for testing
-        id: build_client
-        uses: docker/build-push-action@v4
-        with:
-          file: docker/Dockerfile
-          push: false
-          target: client
-          cache-from: type=registry,ref=permitio/opal-client:latest
-          cache-to: type=inline
-          load: true
-          tags: |
-            permitio/opal-client:test
-
-      - name: Build client-standalone for testing
-        id: build_client_standalone
-        uses: docker/build-push-action@v4
-        with:
-          file: docker/Dockerfile
-          push: false
-          target: client-standalone
-          cache-from: type=registry,ref=permitio/opal-client-standalone:latest
-          cache-to: type=inline
-          load: true
-          tags: |
-            permitio/opal-client-standalone:test
-
-      - name: Build server for testing
-        id: build_server
-        uses: docker/build-push-action@v4
-        with:
-          file: docker/Dockerfile
-          push: false
-          target: server
-          cache-from: type=registry,ref=permitio/opal-server:latest
-          cache-to: type=inline
-          load: true
-          tags: |
-            permitio/opal-server:test
-
-      # TEST PHASE
-      - name: Create modified docker compose file
-        run: sed 's/:latest/:test/g' docker/docker-compose-example.yml > docker/docker-compose-test.yml
-
-      - name: Bring up stack
-        run: docker-compose -f docker/docker-compose-test.yml up -d
-
-      - name: Check if OPA is healthy
-        run: ./scripts/wait-for.sh -t 60 http://localhost:8181/v1/data/users -- sleep 10 && curl -s "http://localhost:8181/v1/data/users" | jq '.result.bob.location.country == "US"'
-
-      - name: Output container logs
-        run: docker-compose -f docker/docker-compose-test.yml logs
-
-      # PUSH PHASE
-      - name: Output local docker images
-        run: docker image ls --digests | grep opal
-
       # pushes the *same* docker images that were previously tested as part of e2e sanity test.
       # each image is pushed with the versioned tag first, if it succeeds the image is pushed with the latest tag as well.
       - name: Build & Push client
@@ -130,38 +60,11 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           target: client
-          cache-from: type=registry,ref=permitio/opal-client:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/opal-client:latest
           cache-to: type=inline
           tags: |
-            permitio/opal-client:latest
-            permitio/opal-client:${{ env.opal_version_tag }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/opal-client:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/opal-client:${{ env.opal_version_tag }}
 
-      - name: Build client-standalone
-        if: ${{ !(github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true') }}
-        id: build_push_client_standalone
-        uses: docker/build-push-action@v4
-        with:
-          file: docker/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          target: client-standalone
-          cache-from: type=registry,ref=permitio/opal-client-standalone:latest
-          cache-to: type=inline
-          tags: |
-            permitio/opal-client-standalone:latest
-            permitio/opal-client-standalone:${{ env.opal_version_tag }}
 
-      - name: Build server
-        if: ${{ !(github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true') }}
-        id: build_push_server
-        uses: docker/build-push-action@v4
-        with:
-          file: docker/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          target: server
-          cache-from: type=registry,ref=permitio/opal-server:latest
-          cache-to: type=inline
-          tags: |
-            permitio/opal-server:latest
-            permitio/opal-server:${{ env.opal_version_tag }}
+
