@@ -1,4 +1,4 @@
-name: my Build and publish to Docker Hub
+name: my Build and publish opal-client to Docker Hub
 on:
   release:
     # job will automatically run after a new "release" is create on github.
