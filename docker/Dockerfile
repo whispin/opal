@@ -1,7 +1,7 @@
 # BUILD STAGE ---------------------------------------
 # split this stage to save time and reduce image size
 # ---------------------------------------------------
-FROM python:3.10-bullseye as BuildStage
+FROM python:3.10-bookworm as BuildStage
 # from now on, work in the /app directory
 WORKDIR /app/
 # Layer dependency install (for caching)
@@ -24,7 +24,7 @@ RUN cd /tmp/cedar-agent && \
 
 # COMMON IMAGE --------------------------------------
 # ---------------------------------------------------
-FROM python:3.10-slim-bullseye as common
+FROM python:3.10-slim-bookworm as common
 
 # copy libraries from build stage (This won't copy redundant libraries we used in BuildStage)
 COPY --from=BuildStage /usr/local /usr/local
@@ -39,7 +39,7 @@ RUN chmod +x ./wait-for.sh
 RUN ln -s /opal/wait-for.sh /usr/wait-for.sh
 
 # netcat (nc) is used by the wait-for.sh script
-RUN apt-get update && apt-get install -y netcat jq && apt-get clean
+RUN apt-get update && apt-get install -y netcat-traditional jq && apt-get clean
 
 # copy startup script (create link at old path to maintain backward compatibility)
 COPY ./scripts/start.sh .
@@ -48,7 +48,9 @@ RUN ln -s /opal/start.sh /start.sh
 # copy gunicorn_config
 COPY ./scripts/gunicorn_conf.py .
 # copy app code
-COPY . ./
+
+COPY ./README.md .
+COPY ./packages ./packages/
 # install the opal-common package
 RUN cd ./packages/opal-common && python setup.py install
 # Make sure scripts in .local are usable:
@@ -142,7 +144,7 @@ USER opal
 # ---------------------------------------------------
 FROM common as server
 
-RUN apt-get update && apt-get install -y openssh-client git curl && apt-get clean
+RUN apt-get update && apt-get install -y openssh-client git && apt-get clean
 
 USER opal
 
